@@ -15,6 +15,8 @@ const validate = (data, forCreation = true) => {
 };
 
 const findMany = ({ filters: { color, max_duration, user_id } }) => {
+  console.log(color, max_duration, user_id);
+
   let sql = "SELECT * FROM movies";
   const sqlValues = [];
 
@@ -29,9 +31,11 @@ const findMany = ({ filters: { color, max_duration, user_id } }) => {
   }
   if (user_id) {
     sqlValues.length ? (sql += " AND ") : (sql += " WHERE ");
-    sql += "user_id <= ?";
-    sqlValues.push(user_id.id);
+    sql += "user_id = ?";
+    sqlValues.push(user_id);
   }
+
+  console.log(sql, sqlValues);
 
   return db.query(sql, sqlValues).then(([results]) => results);
 };

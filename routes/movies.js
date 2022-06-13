@@ -1,24 +1,26 @@
 const moviesRouter = require("express").Router();
 const Movie = require("../models/movie");
 const User = require("../models/user");
+const { decodeToken } = require("../helpers/users");
 
 moviesRouter.get("/", (req, res) => {
   const { max_duration, color } = req.query;
   const cookies = req.cookies;
   const token = cookies.user_token;
-
-  User.findIdByToken(token).then((user_id) => {
-    if (user_id) {
-      Movie.findMany({ filters: { max_duration, color, user_id } })
-        .then((movies) => {
-          res.json(movies);
-        })
-        .catch((err) => {
-          console.log(err);
-          res.status(500).send("Error retrieving movies from database");
-        });
-    } else res.status(401).send("user not logged in");
-  });
+  const decodedToken = decodeToken(token);
+  const user_id = decodedToken.user_id;
+  // User.findIdByToken(token).then((user_id) => {
+  if (user_id) {
+    Movie.findMany({ filters: { max_duration, color, user_id } })
+      .then((movies) => {
+        res.json(movies);
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(500).send("Error retrieving movies from database");
+      });
+  } else res.status(401).send("user not logged in");
+  // });
 });
 
 moviesRouter.get("/:id", (req, res) => {
@@ -43,20 +45,24 @@ moviesRouter.post("/", (req, res) => {
   if (error) {
     res.status(422).json({ validationErrors: error.details });
   } else {
-    User.findIdByToken(token).then((userId) => {
-      console.log("userId", userId, typeof userId);
+    // User.findIdByToken(token).then((userId) => {
+    const decodedToken = decodeToken(token);
+    const userId = decodedToken.user_id;
+    console.log("decodedToken", decodedToken);
 
-      if (userId) {
-        Movie.create({ ...req.body, user_id: userId.id })
-          .then((createdMovie) => {
-            res.status(201).json(createdMovie);
-          })
-          .catch((err) => {
-            console.error(err);
-            res.status(500).send("Error saving the movie");
-          });
-      } else res.status(401).send("user not logged in");
-    });
+    console.log("userId", userId, typeof userId);
+
+    if (userId) {
+      Movie.create({ ...req.body, user_id: userId })
+        .then((createdMovie) => {
+          res.status(201).json(createdMovie);
+        })
+        .catch((err) => {
+          console.error(err);
+          res.status(500).send("Error saving the movie");
+        });
+    } else res.status(401).send("user not logged in");
+    // });
   }
 });
 

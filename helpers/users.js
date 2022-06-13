@@ -1,13 +1,14 @@
-const crypto = require("crypto");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
 
-const calculateToken = (userEmail = "") => {
-  return crypto
-    .createHash("md5")
-    .update(userEmail + PRIVATE_KEY)
-    .digest("hex");
+const calculateToken = (userEmail = "", userId = "") => {
+  return jwt.sign({ email: userEmail, user_id: userId }, PRIVATE_KEY);
+};
+
+const decodeToken = (token) => {
+  return jwt.decode(token);
 };
 
 // now some tests:
@@ -21,4 +22,4 @@ calculateToken("otherEmail@gmail.com");
 calculateToken("firstEmail@gmail.com");
 // returns 731f04b6e83c8e911e0520a1994afaae (just as the first string)
 
-module.exports = { calculateToken };
+module.exports = { calculateToken, decodeToken };
